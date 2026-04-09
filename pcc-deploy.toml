@@ -1,0 +1,6 @@
+agent_name = "whatsapp-voice-agent"
+image = "YOUR_DOCKERHUB_USERNAME/whatsapp-voice-agent:0.1"
+secret_set = "whatsapp-secrets"
+
+[scaling]
+min_agents = 1
