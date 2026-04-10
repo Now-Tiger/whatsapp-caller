@@ -5,10 +5,9 @@ description = "A real-time voice bot that integrates with WhatsApp Business API"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"    # restrict to known-working range
 dependencies = [
-    "pipecat-ai[openai,deepgram,silero,webrtc]>=0.0.105",
+    "pipecat-ai[openai,deepgram,silero,webrtc,runner]>=0.0.105",
     "pipecatcloud>=0.0.1",
     "numba==0.61.2",
-    "torch>=2.1.0",
     "llvmlite==0.44.0",
     "python-dotenv>=1.2.2",
     "loguru>=0.7.3",
@@ -20,9 +19,4 @@ dev = [
     "uvicorn>=0.32.0,<1.0.0",
     "python-dotenv>=1.0.1,<2.0.0",
     "fastapi>=0.115.6,<0.117.0"
-]
-
-[tool.uv]
-required-environments = [
-    "sys_platform == 'darwin' and platform_machine == 'x86_64'"
 ]
