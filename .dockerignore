@@ -1,0 +1,36 @@
+# Git files
+.git
+.gitignore
+
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Development files
+.cursor/
+.env
+.env.local
+.env.*.local
+
+# Documentation
+docs/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+
+# Pipecat documentation folder
+pipecat/
