@@ -20,15 +20,16 @@ FROM python:3.13-slim AS final
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Set environment variables
+ENV PATH="/venv/bin:$PATH"
+
 # Copy virtual environment from builder stage
-COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /venv /venv
 
 # Copy application files
 COPY bot.py bot_prompt.py ./
 
-# Set environment variables
-ENV PATH="/opt/venv/bin:$PATH"
-ENV PYTHONPATH="/opt/venv/lib/python3.12/site-packages"
+# ENV PYTHONPATH="/opt/venv/lib/python3.12/site-packages"
 
 # Expose port (if needed for local development)
 EXPOSE 7860
