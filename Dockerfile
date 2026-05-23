@@ -1,16 +1,11 @@
-FROM python:3.12-slim-trixie
+# ---------- Stage 1: Build ----------
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
-# The installer requires curl (and certificates) to download the release archive
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
-
-# Download the latest installer
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-
-# Run the installer then remove it
-RUN sh /uv-installer.sh && rm /uv-installer.sh
-
-# Ensure the installed binary is on the `PATH`
-ENV PATH="/root/.local/bin/:$PATH"
+# Optimized UV configuration
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+# Install dependencies into a standard location for easy copying
+ENV UV_PROJECT_ENVIRONMENT="/venv"
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
@@ -19,7 +14,11 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen
 
 # Stage 2: Runtime image
-FROM python:3.12-slim
+FROM python:3.13-slim AS final
+
+# Standard Python optimizations
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
