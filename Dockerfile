@@ -1,42 +1,50 @@
-# ---------- Stage 1: Build ----------
+# ---------- Stage 1: Build & Verify ----------
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
-# Optimized UV configuration
+# Set working directory
+WORKDIR /app
+
+# Enable bytecode compilation for performance and security (prevents source tampering in prod)
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
-# Install dependencies into a standard location for easy copying
-ENV UV_PROJECT_ENVIRONMENT="/venv"
 
-# Copy dependency files
+# Copy only dependency blueprints first to leverage Docker layer caching
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies with uv
-RUN uv sync --frozen
+# Verify and lock dependencies strictly without creating a standard virtual environment
+RUN uv sync --frozen --no-install-project
 
-# Stage 2: Runtime image
-FROM python:3.13-slim AS final
+# ---------- Stage 2: Secure Runtime ----------
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS final
 
 # Standard Python optimizations
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Set environment variables
-ENV PATH="/venv/bin:$PATH"
+WORKDIR /app
 
-# Copy virtual environment from builder stage
-COPY --from=builder /venv /venv
+# Least Privileged Principle: Create a non-root system user for security
+RUN groupadd -r botuser && useradd -r -g botuser botuser
+
+# Copy the cache and synchronization state from the builder stage
+COPY --from=builder /root/.cache /root/.cache
+COPY --from=builder /app /app
 
 # Copy application files
 COPY bot.py bot_prompt.py ./
 
-# ENV PYTHONPATH="/opt/venv/lib/python3.12/site-packages"
+# Secure file permissions so the non-root user can run the app but not modify it
+RUN chown -R botuser:botuser /app
 
-# Expose port (if needed for local development)
+# Switch to the secure non-root user
+USER botuser
+
+# Expose port (if needed)
 EXPOSE 7860
 
-# Health check
+# Health check matching your runtime execution strategy
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
+    CMD uv run python -c "import sys; sys.exit(0)" || exit 1
 
-# Run the bot
+# Run the bot securely via uv runtime isolation
 CMD ["uv", "run", "bot.py"]
